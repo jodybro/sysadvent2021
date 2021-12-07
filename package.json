@@ -1,0 +1,25 @@
+{
+    "name": "sysadvent2021-article",
+    "repository": "https://github.com/jodybro/sysadvent2021.git",
+    "release": {
+        "branches": [
+            "main"
+        ],
+        "npmPublish": false,
+        "plugins": [
+            "@semantic-release/commit-analyzer",
+            "@semantic-release/release-notes-generator",
+            "@semantic-release/changelog",
+            "@semantic-release/npm",
+            "@semantic-release/github"
+        ]
+    },
+    "devDependencies": {
+        "@semantic-release/changelog": "^6.0.0",
+        "@semantic-release/commit-analyzer": "^9.0.1",
+        "@semantic-release/git": "^10.0.0",
+        "@semantic-release/npm": "^8.0.0",
+        "@semantic-release/release-notes-generator": "^10.0.2",
+        "semantic-release": "^18.0.0"
+    }
+}

@@ -1,0 +1,75 @@
+name: Release
+on:
+  push:
+    branches:
+      - main
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 'lts/*'
+      
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check next version
+        id: version
+        run: echo ::set-output name=SEMANTIC_TAG::$(echo $(npx semantic-release --dryRun | grep -oP 'Published release \K.*? '))
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
+
+      - name: Build image `
+        uses: docker/build-push-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          tags: latest,${{ steps.version.outputs.SEMANTIC_TAG }}
+
+    outputs:
+      SEMANTIC_TAG: "${{ steps.version.outputs.SEMANTIC_TAG }}"
+
+  deploy:
+    needs: release
+    container: ghcr.io/jodybro/argocd-cli:latest
+    runs-on: ubuntu-latest
+    steps:
+
+      # Log into the argocd server using the cli image that I've built in another repo
+      - name: Log into argocd
+        run: |
+          argocd login ${{ secrets.ARGOCD_GRPC_SERVER }} --username ${{ secrets.ARGOCD_USER }} --password ${{ secrets.ARGOCD_PASSWORD }}
+
+      - name: Deploy main environment
+        run: |
+          argocd app create sysadvent2021-main \
+            --repo https://github.com/jodybro/sysadvent2021.git \
+            --revision main \
+            --path . \
+            --upsert \
+            --dest-namespace argocd \
+            --dest-server https://kubernetes.default.svc \
+            --sync-policy automated \
+            --values values.yaml \
+            --helm-set version="${{ needs.release.outputs.SEMANTIC_TAG }}" \
+            --helm-set name="sysadvent2021-main" \
+            --helm-set env[0].value="${{ needs.release.outputs.SEMANTIC_TAG }}" \
+            --helm-set env[1].value="main" \
+            --helm-set env[2].value="sysadvent2021-main"
+
+
+

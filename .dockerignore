@@ -1,0 +1,11 @@
+node_modules
+images
+templates
+.gitignore
+.helmignore
+CHANGELOG.md
+Chart.yaml
+LICENSE
+package.json
+package-lock.json
+README.md

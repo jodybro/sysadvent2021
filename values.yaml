@@ -1,0 +1,28 @@
+---
+name: sysadvent2021-main
+version: latest
+image: ghcr.io/jodybro/observabilitycon-2021-article
+labels: {}
+annotations: {}
+env: 
+  - name: VERSION
+    value: "1.0.0"
+  - name: BRANCH
+    value: main
+  - name: APP
+    value: sysadvent2021
+containerPorts: {}
+requests: 
+  memory: 64Mi
+  cpu: 250m
+limits:
+  memory: 128Mi 
+  cpu: 500m
+
+service:
+  enabled: true
+  ports: 
+    - name: app 
+      protocol: TCP
+      port: 8000
+      targetPort: 8000

@@ -1,0 +1,8 @@
+---
+apiVersion: v2
+name: sysadvent2021
+appVersion: "0.1.0"
+version: 0.1.0
+type: application
+maintainers:
+    - name: jodybro

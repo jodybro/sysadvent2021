@@ -1,0 +1,28 @@
+---
+{{- if .Values.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+{{- if .Values.annotations }}
+  annotations:
+{{- range $key, $value := .Values.annotations }}
+    {{ $key }}: {{ $value | quote }}
+{{- end }}
+{{- end }}
+{{- if .Values.labels }}
+  labels:
+    {{- include "sysadvent2021.labels" . | nindent 4 }}
+{{- range $key, $value := .Values.labels }}
+    {{ $key }}: {{ $value | quote }}
+{{- end }}
+{{- end }}
+  name: "{{ .Values.name | toString }}"
+spec:
+  ports:
+{{- toYaml .Values.service.ports | nindent 4 }}
+  selector:
+   {{- include "sysadvent2021.labels" . | nindent 4 }}
+{{- range $key, $value := .Values.labels }}
+    {{ $key }}: {{ $value | quote }}
+{{- end }}
+{{ end }}

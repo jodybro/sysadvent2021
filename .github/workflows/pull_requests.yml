@@ -1,0 +1,51 @@
+---
+name: 'Build image and push PR image to ghcr'
+on:
+  pull_request:
+    types: [assigned, opened, synchronize, reopened]
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build image
+        uses: docker/build-push-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          tags: PR-${{ github.event.pull_request.number }}
+
+    
+  deploy:
+    needs: build
+    container: ghcr.io/jodybro/argocd-cli:1.1.0
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log into argocd
+        run: |
+          argocd login ${{ secrets.ARGOCD_GRPC_SERVER }} --username ${{ secrets.ARGOCD_USER }} --password ${{ secrets.ARGOCD_PASSWORD }}
+
+      - name: Deploy PR Build
+        run: |
+          argocd app create sysadvent2021-pr-${{ github.event.pull_request.number }} \
+            --repo https://github.com/jodybro/sysadvent2021.git \
+            --revision ${{ github.head_ref }} \
+            --path . \
+            --upsert \
+            --dest-namespace argocd \
+            --dest-server https://kubernetes.default.svc \
+            --sync-policy automated \
+            --values values.yaml \
+            --helm-set version="PR-${{ github.event.pull_request.number }}" \
+            --helm-set name="sysadvent2021-pr-${{ github.event.pull_request.number }}" \
+            --helm-set env[0].value="PR-${{ github.event.pull_request.number }}" \
+            --helm-set env[1].value="${{ github.head_ref }}" \
+            --helm-set env[2].value="sysadvent2021-pr-${{ github.event.pull_request.number }}"
+
+

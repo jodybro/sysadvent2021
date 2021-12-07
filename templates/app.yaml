@@ -1,0 +1,54 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.name | toString  }}"
+spec:
+  selector:
+    matchLabels:
+      {{- include "sysadvent2021.labels" . | nindent 6 }}
+{{- if .Values.labels -}}
+    {{- range $key, $value := .Values.labels }}
+      {{ $key }}: {{ $value | quote }}
+    {{- end }}
+{{- end }}
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        {{- include "sysadvent2021.labels" . | nindent 8 }}
+{{- if .Values.labels -}}
+      {{- range $key, $value := .Values.labels }}
+        {{ $key }}: {{ $value | quote }}
+      {{- end }}
+{{- end }}
+    {{- if .Values.annotations }}
+      annotations:
+      {{- range $key, $value := .Values.annotations }}
+        {{ $key }}: {{ $value | quote }}
+      {{- end }}
+    {{- end }}
+    spec:
+      containers:
+        - name: "{{ .Values.name | toString  }}"
+          image: "{{ .Values.image | toString }}:{{ .Values.version | toString }}"
+{{- if .Values.env }}
+          env:
+          {{- range .Values.env }}
+            - name: {{ .name }}
+              value: {{ .value | quote }}
+          {{- end }}
+{{- end }}
+          resources:
+            requests:
+              memory: "{{ .Values.requests.memory | toString }}"
+              cpu: "{{ .Values.requests.cpu | toString }}"
+            limits:
+              memory: "{{ .Values.limits.memory | toString }}"
+              cpu: "{{ .Values.limits.cpu | toString }}"
+{{- if .Values.containerPorts }}
+          ports:
+    {{- range $key, $value := .Values.containerPorts }}
+            {{ $key }}: {{ $value | quote }}
+    {{- end }}
+{{- end }}
